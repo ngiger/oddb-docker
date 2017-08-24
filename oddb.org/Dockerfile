@@ -7,7 +7,6 @@ RUN apt-get update && apt-get install -y ruby-full
 RUN apt-get update && apt-get install -y git
 RUN mkdir /var/www
 RUN useradd --create-home --shell /bin/bash oddb
-# RUN adduser --disabled-password --gecos '' oddb
 RUN mkdir -p /var/www/oddb.org && chown -R oddb:oddb /var/www/oddb.org
 ADD assets/sources.list /etc/apt/sources.list.d/sources.list
 RUN apt-get update
@@ -17,16 +16,7 @@ RUN apt-get update && apt-get -y install $RUBY_PACKS && apt-get -y build-dep $RU
 USER oddb
 WORKDIR /var/www/oddb.org
 RUN git clone https://github.com/zdavatz/oddb.org.git .
-# USER root
-# RUN apt-get -y install ruby-libxml ruby-rmagick
-# RUN apt-get update && apt-get -y build-dep ruby-libxml imagemagick ruby-rmagick
-# USER oddb
-RUN bundle install --path vendor --without development debugger; \
- cat /var/www/oddb.org/vendor/ruby/2.3.0/extensions/x86_64-linux/2.3.0/rmagick-2.13.4/mkmf.log ; \
- cat /var/www/oddb.org/vendor/ruby/2.3.0/extensions/x86_64-linux/2.3.0/rmagick-2.13.4/gem_make.out
- 
-
- # USE --no-install-recommends
- # ~/.gemrc
- # ---
-# gem: --no-ri --no-rdoc
+# Work around a problem, that we want to install a more current version of rmagick and pg
+RUN rm Gemfile.lock
+RUN git checkout Gemfile && awk '/rmagick|pg/{gsub(/,/, "# ,")};{print}' Gemfile > Gemfile.new && grep pg Gemfile.new && mv Gemfile.new Gemfile
+RUN bundle install --path vendor --without development debugger test
