@@ -1,0 +1,41 @@
+# Copyright (c) 2017 by Niklaus Giger niklaus.giger@member.fsf.org
+#
+# All rights reserved. This program and the accompanying materials
+# are made available under the terms of the Eclipse Public License v1.0
+# which accompanies this distribution, and is available at
+# http:#www.eclipse.org/legal/epl-v10.html
+#
+# This is a setup for running peter schönbuchers privates wiki
+#
+version: '2.0'
+services:
+  yus:
+    build: yus
+    networks:
+      private:
+      public:
+    environment:
+        POSTGRES_PASSWORD: example
+    ports:
+      - 60080:60080
+    volumes:
+      - $PWD/yus/pgdata:/var/lib/postgresql/data postgres
+  currency:
+    build: currency
+    networks:
+      private:
+      public:
+  migeld:
+    build: migeld
+    networks:
+      private:
+      public:      
+  oddb.org:
+    build: oddb.org
+    networks:
+      private:
+      public:
+      
+networks:
+  public:
+  private:

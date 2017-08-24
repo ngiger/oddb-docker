@@ -1,4 +1,4 @@
-h1. Purpose
+# Purpose
 
 Setup an infrastructure which can be easily duplicated to run test (unit-tests and Watir). Based on "docker":https://www.docker.com/ and "docker-compose":https://docs.docker.com/compose/.
 
@@ -8,21 +8,22 @@ The work is based on https://github.com/ngiger/vagrant-oddb_org and the accumula
 
 It is unclear if and upto which extent we reuse the puppet modules.
 
-h2. Design decisions
+## Design decisions
 
 * Move from vagrant to docker to speed up running a server (going down from minutes to seconds).
 
-h2. installation
+## installation
 
 Upcoming
 
-h2. TODO
+## TODO
 
 Port the following services. Probably in this order
 
 * yus
 * currency
 * migeld
+
 * ch.oddb-fiparse
 * ch.oddb-export
 * ch.oddb-refdata
