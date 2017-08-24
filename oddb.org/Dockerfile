@@ -15,8 +15,13 @@ RUN cat /etc/apt/sources.list /etc/apt/sources.list.d/sources.list
 RUN apt-get update && apt-get -y install $RUBY_PACKS && apt-get -y build-dep $RUBY_PACKS 
 USER oddb
 WORKDIR /var/www/oddb.org
-RUN git clone https://github.com/zdavatz/oddb.org.git .
+RUN git clone https://github.com/ngiger/oddb.org.git .
 # Work around a problem, that we want to install a more current version of rmagick and pg
 RUN rm Gemfile.lock
-RUN git checkout Gemfile && awk '/rmagick|pg/{gsub(/,/, "# ,")};{print}' Gemfile > Gemfile.new && grep pg Gemfile.new && mv Gemfile.new Gemfile
-RUN bundle install --path vendor --without development debugger test
+RUN git checkout -b docker origin/docker
+RUN bundle install --path vendor --without development test
+USER root
+RUN apt-get -y install postgresql-client vim-nox
+RUN echo 'pgoddborg:5432:oddb:postres:example' >/root/.pgpass && chmod 0600 /root/.pgpass
+
+# hostname:port:database:username:password

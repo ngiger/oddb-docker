@@ -20,15 +20,23 @@ Upcoming
 
 Port the following services. Probably in this order
 
-* yus
-* currency
-* migeld
+* yus (port 12005) # Braucht Dateien in /etc/yus.oddb
+* currency (port 10999)
+* migeld (port 33000)
 
-* ch.oddb-fiparse
-* ch.oddb-export
-* ch.oddb-refdata
+* ch.oddb-fiparse (port 10002)
+* ch.oddb-export (port 10005)
 * ch.oddb-swissindex_pharma
-* ch.oddb-swissreg
-* ch.oddb
-* ch.oddb-meddata
-* oddb_google_crawler
+* ch.oddb-swissreg (port 10007)
+* ch.oddb (port 10000)
+* ch.oddb-meddata (port 10006)
+
+* oddb_crawler (port 1001)
+* oddb_google_crawler (port 1008)
+* ch.oddb-refdata
+
+Vorgehen beim Importieren
+
+## Protocol setup
+
+Import daily did have to many errors, therefore fixed a few problem with missing atc-code. Then I was able to run `bundle exec ruby jobs/import_swissmedic_only`. Duration ? hours.

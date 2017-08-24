@@ -9,17 +9,26 @@
 #
 version: '2.0'
 services:
+  pg.yus:
+    image: postgres:9.6-alpine
+    environment:
+        POSTGRES_PASSWORD: example
+        PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - $PWD/yus/assets/init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh
+      - $PWD/pgdata/yus:/var/lib/postgresql/data/pgdata
   yus:
     build: yus
     networks:
       private:
       public:
     environment:
-        POSTGRES_PASSWORD: example
+      POSTGRES_PASSWORD: example
     ports:
       - 60080:60080
-    volumes:
-      - $PWD/yus/pgdata:/var/lib/postgresql/data postgres
+    depends_on:
+      - pg.yus
+
   currency:
     build: currency
     networks:
@@ -29,12 +38,44 @@ services:
     build: migeld
     networks:
       private:
-      public:      
-  oddb.org:
+      public:
+  pgoddborg:
+    image: postgres:9.6-alpine
+    environment:
+        POSTGRES_PASSWORD: example
+        PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - $PWD/oddb.org/assets/init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh
+      - $PWD/pgdata/pgoddborg:/var/lib/postgresql/data/pgdata
+    networks:
+      private:
+      public:
+  oddborg:
     build: oddb.org
     networks:
       private:
       public:
+    depends_on:
+      - "pgoddborg"
+    links:
+      - "pgoddborg"
+    command:  etc/my_startup
+    # ["bundle", "exec", "rackup", "-p", "8012", "--quiet"]
+    # bundle-240  exec rackup -p 8012 --quiet
+    environment:
+        POSTGRES_PASSWORD: example
+    ports:
+      - 8012:8012
+    volumes:
+      - $PWD/test_src:/var/www/oddb.org/
+      - $PWD/oddb.org/downloads:/var/www/oddb.org/downloads
+      - $PWD/oddb.org/data:/var/www/oddb.org/data
+      - $PWD/oddb.org/log:/var/www/oddb.org/log
+      - $PWD/oddb.org/etc:/var/www/oddb.org/etc
+
+# TODO: Versenden von mails
+# TODO: etc
+# TODO: must call first docker-compose up --build pgoddborg
       
 networks:
   public:
