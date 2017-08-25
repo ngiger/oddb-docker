@@ -1,0 +1,5 @@
+#!/bin/bash
+dump_file="/var/pg_dumps/oddb_dump-`date +%Y-%m-%d`.sql.gz"
+echo $dump_file
+docker-compose exec pgoddb pg_dump --user postgres --clean --file=$dump_file -Z oddb
+ls -lrth pg_dumps/oddb*

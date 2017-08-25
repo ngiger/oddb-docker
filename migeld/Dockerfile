@@ -13,11 +13,12 @@ ADD assets/sources.list /etc/apt/sources.list.d/sources.list
 RUN apt-get update 
 RUN apt-get -y install postgresql-server-dev-9.6 ruby-bundler ruby-sequel ruby-sequel-pg && apt-get -y build-dep ruby-sequel ruby-sequel-pg ruby-full
 RUN apt-get -y install ruby-nokogiri ruby-spreadsheet && apt-get -y build-dep ruby-nokogiri ruby-spreadsheet
-USER migeld
-WORKDIR /var/www/migel
-RUN git clone https://github.com/zdavatz/migel.git .
-USER root
 RUN apt-get -y install ruby-libxml && apt-get -y build-dep ruby-libxml
-USER migeld
+RUN gem install rclconf
+WORKDIR /var/www/migel
+RUN chown -R migeld /var/www/migel
+USER migeld 
+RUN git clone https://github.com/ngiger/migel.git .
+RUN find . -name migeld
 RUN bundle install --path vendor --without development debugger
 

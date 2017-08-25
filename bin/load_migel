@@ -1,0 +1,6 @@
+#!/bin/bash
+docker-compose stop
+docker-compose create pgmigel
+docker-compose start pgmigel
+docker-compose exec pgmigel  ls -lrth /var/pg_dumps/
+time docker-compose exec pgmigel /bin/bash /usr/local/bin/load_migel.sh

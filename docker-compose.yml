@@ -9,7 +9,7 @@
 #
 version: '2.0'
 services:
-  pg.yus:
+  pgyus:
     image: postgres:9.6-alpine
     environment:
         POSTGRES_PASSWORD: example
@@ -17,6 +17,40 @@ services:
     volumes:
       - $PWD/yus/assets/init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh
       - $PWD/pgdata/yus:/var/lib/postgresql/data/pgdata
+      - $PWD/bin/load_yus.sh:/usr/local/bin/load_yus.sh
+      - $PWD/pg_dumps:/var/pg_dumps
+    networks:
+      private:
+      public:
+
+  pgmigel:
+    image: postgres:9.6-alpine
+    environment:
+        POSTGRES_PASSWORD: example
+        PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - $PWD/migel/assets/init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh
+      - $PWD/pgdata/migel:/var/lib/postgresql/data/pgdata
+      - $PWD/bin/load_migel.sh:/usr/local/bin/load_migel.sh
+      - $PWD/pg_dumps:/var/pg_dumps
+    networks:
+      private:
+      public:
+
+  pgoddb:
+    image: postgres:9.6-alpine
+    environment:
+        POSTGRES_PASSWORD: example
+        PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - $PWD/oddb/assets/init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh
+      - $PWD/pgdata/pgoddb:/var/lib/postgresql/data/pgdata
+      - $PWD/bin/load_oddb.sh:/usr/local/bin/load_oddb.sh
+      - $PWD/pg_dumps:/var/pg_dumps
+    networks:
+      private:
+      public:
+
   yus:
     build: yus
     networks:
@@ -24,59 +58,114 @@ services:
       public:
     environment:
       POSTGRES_PASSWORD: example
+    command:  yusd
     ports:
-      - 60080:60080
+      - 12005:12005
     depends_on:
-      - pg.yus
+      - pgyus
+    networks:
+      private:
+      public:
+
+  migeld:
+    build: migeld
+    networks:
+      private:
+      public:
+    ports:
+      - 33000:33000
+    depends_on:
+      - pgmigel
+    command:  bundle exec bin/migeld
 
   currency:
     build: currency
     networks:
       private:
       public:
-  migeld:
-    build: migeld
+    ports:
+      - 10999:10999
+    command:  currencyd
+
+  fiparse:
+    build: oddb
     networks:
       private:
       public:
-  pgoddborg:
-    image: postgres:9.6-alpine
-    environment:
-        POSTGRES_PASSWORD: example
-        PGDATA: /var/lib/postgresql/data/pgdata
-    volumes:
-      - $PWD/oddb.org/assets/init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh
-      - $PWD/pgdata/pgoddborg:/var/lib/postgresql/data/pgdata
-    networks:
-      private:
-      public:
-  oddborg:
-    build: oddb.org
-    networks:
-      private:
-      public:
+    ports:
+      - 10002:10002
     depends_on:
-      - "pgoddborg"
-    links:
-      - "pgoddborg"
-    command:  etc/my_startup
-    # ["bundle", "exec", "rackup", "-p", "8012", "--quiet"]
-    # bundle-240  exec rackup -p 8012 --quiet
+      - pgoddb
+    volumes:
+      - $PWD/oddb/etc:/var/www/oddb.org/etc
+    command:  bundle exec ruby ext/fiparse/bin/fiparsed
+
+  export:
+    build: oddb
+    networks:
+      private:
+      public:
+    ports:
+      - 10005:10005
+    command:  bundle exec ruby ext/export/bin/exportd
+
+  swissindexd:
+    build: oddb
+    networks:
+      private:
+      public:
+    ports:
+      - 50002:50002
+    command:  bundle exec ruby ext/swissindex/bin/swissindexd
+
+  swissreg:
+    build: oddb
+    networks:
+      private:
+      public:
+    ports:
+      - 10007:10007
+    command:  bundle exec ruby ext/swissreg/bin/swissregd
+
+  meddata:
+    build: oddb
+    networks:
+      private:
+      public:
+    ports:
+      - 10006:10006
+    command:  bundle exec ruby ext/meddata/bin/meddatad
+
+  oddb:
+    build: oddb
+    networks:
+      private:
+      public:
+    # extra_hosts:
+    #   oddb.ngiger.ch: 127.0.1.1
+    depends_on:
+      - yus
+      - currency
+      - migeld
+      - export
+      - fiparse
+      - swissindexd
+      - swissreg
+      - pgoddb
+    command:  bundle exec rackup -p 8012 --quiet
     environment:
         POSTGRES_PASSWORD: example
     ports:
-      - 8012:8012
+      - 8212:8012
     volumes:
-      - $PWD/test_src:/var/www/oddb.org/
-      - $PWD/oddb.org/downloads:/var/www/oddb.org/downloads
-      - $PWD/oddb.org/data:/var/www/oddb.org/data
-      - $PWD/oddb.org/log:/var/www/oddb.org/log
-      - $PWD/oddb.org/etc:/var/www/oddb.org/etc
+      # The next line is only needed if you want to debug your custome version of oddb.org
+      # Inside the container we already have a checked out version of the oddb.org code!
+      - $PWD/oddb.org:/var/www/oddb.org/
+      - $PWD/downloads/oddb:/var/www/oddb.org/downloads
+      - $PWD/data/oddb:/var/www/oddb.org/data
+      - $PWD/logs/oddb:/var/www/oddb.org/log
+      - $PWD/git d/etc:/var/www/oddb.org/etc
 
-# TODO: Versenden von mails
-# TODO: etc
-# TODO: must call first docker-compose up --build pgoddborg
-      
 networks:
   public:
   private:

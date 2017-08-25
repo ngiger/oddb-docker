@@ -1,0 +1,5 @@
+#!/bin/bash
+dump_file="/var/pg_dumps/yus_dump-`date +%Y-%m-%d`.sql.gz"
+echo $dump_file
+docker-compose exec pgyus pg_dump --user postgres --clean --file=$dump_file -Z yus
+ls -lrth pg_dumps/yus*
